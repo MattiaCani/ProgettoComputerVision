@@ -5,7 +5,7 @@ data = load('file_list_ridotto.mat');
 file_list = data.file_list; 
 labels = data.new_labels; 
 
-k = 20; % Numero di cluster per BoVW
+k = 10; % Numero di cluster per BoVW
 mode = 'nh'; % Modalità normalizzata per l'istogramma BoVW
 
 % Inizializza le variabili per memorizzare i risultati
@@ -34,7 +34,7 @@ for i = 1:(length(file_list))
         BoVW_features = [BoVW_features; BoVW];
         image_labels = [image_labels; labels(i)];
         
-    catch ME
+     catch ME
         % Se c'è un errore, visualizza un messaggio e continua
         %fprintf('Errore nel caricamento o nella conversione di una immagine\n');
         fprintf('Errore: %s\n', ME.message);

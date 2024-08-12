@@ -1,62 +1,40 @@
-function BoVW = bovw(image, k, mode, trainingImagePaths)
-% BoVW Computes the Bag of Visual Words (BoVW) histogram of an image.
-%   BoVW = BOVW(IMAGE, K, EXTRACTOR, MODE, TRAININGIMAGEPATHS) computes the BoVW histogram of an image
-%   IMAGE using K clusters and a specified EXTRACTOR function. MODE can be 'h' for histogram
-%   or 'nh' for normalized histogram. TRAININGIMAGEPATHS is a cell array of paths to training images
-%   used to create the vocabulary if not already created.
+function BoVW = bovw(image, k, mode, vocab)
+    % BoVW Computes the Bag of Visual Words (BoVW) histogram of an image.
+    narginchk(4, 4);
 
-% Check number of input arguments.
-narginchk(4, 4);
-
-% Convert image to grayscale if it is not already.
-if size(image, 3) == 3
-    image = rgb2gray(image);
-end
-
-% Detect keypoints and extract local features.
-points = detectSURFFeatures(image); 
-[features,~]  = extractFeatures(image, points); %funzione di matlab
-
-% Load or generate the vocabulary (cluster centers).
-persistent vocab;
-if isempty(vocab)
-    % Create vocabulary using training images if not already created
-    all_features = [];
-    for i = 1:length(trainingImagePaths)
-        image_path = trainingImagePaths{i};
-        train_image = imread(image_path);
-        if size(train_image, 3) == 3
-            train_image = rgb2gray(train_image);
-        end
-        train_points = detectSURFFeatures(train_image);
-        [train_features, ~] = extractFeatures(train_image, train_points);
-        all_features = [all_features; train_features];
+    % Verifica che l'immagine sia valida e in scala di grigi
+    if isempty(image) || size(image, 3) ~= 1
+        error('L''immagine non è valida o non è in scala di grigi.');
     end
-    if ~isempty(all_features)
-        [~, features_dim] = size(all_features); % Get the feature dimension
-        vocab = kmeans(all_features, k); % Create vocabulary
-        % Ensure vocab has correct dimensions
-        if size(vocab, 2) ~= features_dim
-            vocab = [vocab, zeros(k, features_dim - size(vocab, 2))];
-        end
+
+    % Rilevamento dei punti SURF e estrazione delle caratteristiche
+    try
+        points = detectSURFFeatures(image); 
+        features = extractFeatures(image, points);
+    catch ME
+        error('Errore nell''estrazione delle caratteristiche SURF: %s', ME.message);
     end
-    % Save the vocabulary in a file for future use
-    save('vocab.mat', 'vocab');
-else
-    % Load the existing vocabulary if available
-    data = load('vocab.mat');
-    vocab = data.vocab;
-end
 
-% Assign each feature to the nearest cluster center.
-%% L'ECCEZIONE STA QUI, UNO DEI DUE TRA VOCAB E FEATURES HA DIMENSIONE SBAGLIATA
-indices = knnsearch(vocab, features);   
+    % Verifica che le caratteristiche siano state estratte correttamente
+    if isempty(features)
+        error('Le caratteristiche non sono state estratte correttamente dall''immagine.');
+    end
 
-% Compute histogram of visual words.
-BoVW = histcounts(indices, 1:k+1);
+    % Calcolo dell'istogramma BoVW
+    try
+        indices = knnsearch(vocab, features);
+        BoVW = histcounts(indices, 1:k+1);
+    catch ME
+        error('Errore durante l''assegnazione delle caratteristiche ai cluster: %s', ME.message);
+    end
 
-% Normalize histogram if requested.
-if strcmp(mode, 'nh')
-    BoVW = BoVW / sum(BoVW);
-end
+    % Normalizzazione dell'istogramma
+    if strcmp(mode, 'nh')
+        BoVW = BoVW / sum(BoVW);
+    end
+
+    % Verifica che l'istogramma BoVW sia stato creato correttamente
+    if isempty(BoVW) || length(BoVW) ~= k
+        error('L''istogramma BoVW non è stato creato correttamente.');
+    end
 end

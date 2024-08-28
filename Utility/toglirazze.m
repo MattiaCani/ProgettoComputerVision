@@ -2,10 +2,10 @@
 %data.file_list e l'altra su data.annotation_list per ognuno dei due file
 
 % Carica il file .mat
-data = load('train_list.mat');
+data = load('file_list_ridotto.mat');
 
 % Supponiamo che la cell array si chiami 'myCellArray'
-myCellArray = data.file_list;
+myCellArray = data.annotation_list;
 
 % L'elenco delle parole da cercare e mantenere, separate da punti e virgola
 paroleDaMantenere = {'Chihuahua';  %label 1 
@@ -21,15 +21,9 @@ paroleDaMantenere = {'Chihuahua';  %label 1
     'German_shepherd';      %label 86
     'Doberman';             %label 87
     'miniature_pinscher';   %label 88
-    'boxer';                %label 93
-    'French_bulldog';       %label 96
-    'Great_Dane';           %label 97
-    'Saint_Bernard';        %label 98
-    'Syberian_husky';       %label 101
-    'Pomeranian';           %label 109
-    'chow';                 %label 110
-    'standard_poodle';      %label 117
-    'Mexican_hairless'};    %label 118
+    'boxer'               %label 93
+   
+    };    
 
 % Trova le righe da mantenere
 righeDaMantenere = false(size(myCellArray));
@@ -41,5 +35,5 @@ end
 myCellArray = myCellArray(righeDaMantenere);
 
 % Salva la cell array aggiornata nel file .mat
-data.file_list = myCellArray;
-save('train_list.mat', '-struct', 'data');
+data.annotation_list = myCellArray;
+save('file_list_ridotto.mat', '-struct', 'data');
